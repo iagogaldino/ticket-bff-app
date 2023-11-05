@@ -25,8 +25,8 @@ export class TicketController {
         const pdv_id = 141;
         const login = 'admin';
         const venda_valor_total = parseInt(tipoIngressoValor);//50;
-        const ingresso_codigo = 5553;
-        // const tipoIngressoId = 26820;
+        const ingresso_codigo = tipoIngressoId;//5553;
+        // const tipoIngressoId = tipoIngressoId;//26820;
         // const eventID = 1182;
 
         const venda_status = 3; // PAGO
