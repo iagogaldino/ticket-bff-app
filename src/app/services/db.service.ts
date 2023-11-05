@@ -12,7 +12,7 @@ export class DBService {
     port: process.env.DATABASE_PORT, // Porta personalizada
   };
   async queryDB(sql: string) {
-    console.log(this.connectionConfig);
+    // console.log(this.connectionConfig);
     const client = new Client(this.connectionConfig);
     try {
       await client.connect();
