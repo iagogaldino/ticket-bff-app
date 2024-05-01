@@ -1,4 +1,5 @@
 # compiled output
+/index.php
 /dist
 /node_modules
 .env
