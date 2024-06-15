@@ -229,4 +229,7 @@ export class TicketService {
     return await this._db.queryDB(`UPDATE ingresso SET ingresso_valor_pago = ${venda_valor_total} WHERE venda_id = '${vendaID}'`);
   }
 
+  async searchClient(clientCpf) {
+    return await this._db.queryDB(`SELECT * from cliente WHERE  cliente_cpf_cnpj = '${clientCpf}'`);
+  }
 }
