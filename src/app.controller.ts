@@ -32,14 +32,12 @@ export class AppController {
     @Body('clientID') clientID: number,
     @Body('eventID') eventID: number,
     @Body('tipoIngressoId') tipoIngressoId: number,
-    @Body('tipoIngressoLote') tipoIngressoLote: number,
   ): Promise<any> {
     return await this._ticketController.generateTicket(
       tipoIngressoValor,
       clientID,
       eventID,
       tipoIngressoId,
-      tipoIngressoLote,
     );
   }
 
@@ -48,10 +46,10 @@ export class AppController {
     return await this._ticketController.getTypeTickets(eventID);
   }
 
-  @Get('getTypeticketDesc/:grupo_ingresso_id/:tipo_ingresso_tipo')
+  @Post('getTypeticketDesc')
   async getTypeticketDesc(
-    @Param('grupo_ingresso_id') grupo_ingresso_id: number,
-    @Param('tipo_ingresso_tipo') tipo_ingresso_tipo: string,
+    @Body('grupo_ingresso_id') grupo_ingresso_id: number,
+    @Body('tipo_ingresso_tipo') tipo_ingresso_tipo: string,
   ): Promise<any> {
     return await this._ticketController.getTypeticketDesc(grupo_ingresso_id, tipo_ingresso_tipo);
   }
@@ -76,6 +74,19 @@ export class AppController {
   async getUrlVoucher(@Param('saleID') saleID: number): Promise<any> {
     return await this._ticketController.getUrlVoucher(saleID);
   }
+
+  @Get('login/:cpf')
+  async login(@Param('cpf') cpf: number): Promise<any> {
+    return await this._ticketController.login(cpf);
+  }
+
+  // @Get('testSqlIjection/:login/:cod_barra')
+  // async testSqlIjection(
+  //   @Param('login') login: string,
+  //   @Param('cod_barra') cod_barra: string
+  // ): Promise<any> {
+  //   return await this._ticketController.testSqlIjection(login, cod_barra);
+  // }
 
    
 

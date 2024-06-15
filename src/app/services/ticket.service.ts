@@ -78,7 +78,8 @@ export class TicketService {
     pdv_id,
     login,
     tipo_retirada_id,
-    venda_valor_total
+    venda_valor_total,
+    venda_cadastro_cliente_aprovado
     )
 	values (
     ${vendaID},
@@ -88,7 +89,8 @@ export class TicketService {
 		${pdv_id},
 		'${login}',
 		${tipo_retirada_id},
-		${venda_valor_total}
+		${venda_valor_total},
+    true
     );
     `;
     const rDB = await this._db.queryDB(sql);
@@ -102,21 +104,27 @@ export class TicketService {
   ) {
     const sqlTicketValue = `SELECT * FROM tipo_ingresso WHERE tipo_ingresso_id = ${tipoIngressoId}`;
     const ticketValue = await this._db.queryDB(sqlTicketValue);
-    // console.log('generateSaleItem', 'generateSaleItem', ticketValue);
+    console.log('generateSaleItem', 'generateSaleItem', ticketValue);
     const sqlItemsSale = `
    INSERT INTO venda_itens (
                 venda_itens_id,
                 tipo_ingresso_id,
                 venda_id,
                 venda_itens_vr_unitario,
-                venda_itens_qtd
+                venda_itens_qtd,
+                venda_itens_vr_total,
+                venda_itens_status,
+                venda_itens_vr_taxa
                 )
        VALUES(
        nextval('gen_venda_itens'),
        ${ticketValue[0].tipo_ingresso_id},
        ${vendaID},
-        ${venda_itens_vr_unitario},
-        1
+       ${venda_itens_vr_unitario},
+        1,
+       '${venda_itens_vr_unitario}',
+        0,
+        '13'
         )
   `;
     const rvendai = await this._db.queryDB(sqlItemsSale);
@@ -131,15 +139,16 @@ export class TicketService {
     forma_pagamento_id,
     venda_pagamento_valor_taxa = '27.47',
     venda_pagamento_valor_pago,
+    venda_pagamento_chave
   ) {
     // const sqlTicketValue = `SELECT * FROM tipo_ingresso WHERE tipo_ingresso_id = ${tipoIngressoId}`;
     // const ticketValue = await this._db.queryDB(sqlTicketValue);
-    const venda_pagamento_data_vencimento = '2010-01-01T03:00:00.000Z';
-    const venda_pagamento_data_pago = '2020-09-20T23:24:45.875Z';
-    const venda_pagamento_chave = '4B28642B-E3BF-4939-8138-ED9670B68795';
+    const venda_pagamento_data_vencimento = null;
+    const venda_pagamento_data_pago = '2024-05-20T23:24:45.875Z';
+    // const venda_pagamento_chave = '4B28642B-E3BF-4939-8138-ED9670B68795';
     const venda_pagamento_obs = 'obs';
     const venda_pagamento_paymentlink = '';
-    const venda_pagamento_barcode = '';
+    const venda_pagamento_barcode = null;
 
     const sqlItemsSale = `
 
@@ -163,8 +172,8 @@ export class TicketService {
        nextval('gen_venda_pagamento'),
         ${venda_id},
         ${venda_pagamento_status},
-        '${venda_pagamento_data_vencimento}',
-        '${venda_pagamento_data_pago}',
+        current_timestamp,
+        current_timestamp,
         '${venda_pagamento_chave}',
         ${venda_pagamento_valor},
         '${venda_pagamento_obs}',
@@ -188,7 +197,9 @@ export class TicketService {
   }
 
   async getTypeticketDesc(grupo_ingresso_id: number, tipo_ingresso_tipo: string) {
-    const sql = `SELECT * FROM tipo_ingresso WHERE grupo_ingresso_id = ${grupo_ingresso_id} AND tipo_ingresso_tipo LIKE '%${tipo_ingresso_tipo}%'`;
+    // const sql = `SELECT * FROM tipo_ingresso WHERE grupo_ingresso_id = ${grupo_ingresso_id} AND tipo_ingresso_tipo LIKE '${tipo_ingresso_tipo}'`;
+    // const sql = `SELECT * FROM tipo_ingresso WHERE grupo_ingresso_id = ${grupo_ingresso_id} AND tipo_ingresso_tipo = '${tipo_ingresso_tipo}'`;
+    const sql = `SELECT * FROM tipo_ingresso WHERE grupo_ingresso_id = ${grupo_ingresso_id}`;
     const resultDB = await this._db.queryDB(sql);
     return resultDB;
   }
@@ -209,10 +220,13 @@ export class TicketService {
   async removeAllSales(clientID: number) {
     const clientSales = await this._db.queryDB(`SELECT * FROM venda WHERE cliente_id = ${clientID}`);
     await clientSales.forEach(async sale => {
-       await this.removeSale(sale.venda_id);
+      await this.removeSale(sale.venda_id);
     });
 
   }
 
+  async updateTicketValue(venda_valor_total: number, vendaID: number) {
+    return await this._db.queryDB(`UPDATE ingresso SET ingresso_valor_pago = ${venda_valor_total} WHERE venda_id = '${vendaID}'`);
+  }
 
 }

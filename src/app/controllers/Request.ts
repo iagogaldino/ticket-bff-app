@@ -4,11 +4,12 @@ export async function fetchDataFromExternalEndpoint(vendaID: number): Promise<an
     try {
         console.log('fetchDataFromExternalEndpoint: vendaID', vendaID)
         // Substitua a URL abaixo pelo endpoint externo que você deseja acessar
-        const response = await axios.get(`https://bff-ticket.000webhostapp.com/?saleID=${vendaID}`);
+        const response = await axios.get(`http://localhost/decript.php/?saleID=${vendaID}`);
         // O resultado da requisição estará em response.data
         return response.data;
     } catch (error) {
-        console.error('Erro na requisição:', error);
+        console.error('Erro na requisição:');
+        // console.error('Erro na requisição:', error);
         throw error;
     }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { TicketService } from '../services/ticket.service';
 import { fetchDataFromExternalEndpoint } from './Request';
 
@@ -18,30 +18,42 @@ export class TicketController {
         clientID: number,
         eventID: number,
         tipoIngressoId: number,
-        tipoIngressoLote: number,
+        // tipoIngressoLote: number,
     ) {
-        // const clientID = 184920;
-
+        this.traceResults = [];
         const pdv_id = 141;
         const login = 'admin';
-        const venda_valor_total = parseInt(tipoIngressoValor);//50;
-        const ingresso_codigo = tipoIngressoId;//5553;
-        // const tipoIngressoId = tipoIngressoId;//26820;
-        // const eventID = 1182;
+        const venda_valor_total = parseFloat(tipoIngressoValor);//50;
+        const ingresso_codigo = tipoIngressoId;
 
         const venda_status = 3; // PAGO
         const tipo_retirada_id = 9;
         const ingresso_forma_pagamento = 1;
-        const venda_itens_vr_unitario = 1;
+        const venda_itens_vr_unitario = venda_valor_total;
 
         const venda_pagamento_status = 3
-        const forma_pagamento_id = 3; // Forma da pagamento => CARTAO DEBITO 2 , 3 Credito
-        const venda_pagamento_valor_taxa = '10'
+
+
+        // ID | taxa
+        // 1; "Dinheiro" | 0.00
+        // 4; "Credito Parcelado" | 10.00
+        // 5; "Boleto" | 10.00
+        // 6; "Boleto Parcelado" | 10.00
+        // 7; "Debito em Conta TEF" | 10.00
+        // 2; "Cartão de Debito" | 5.00
+        // 3; "Crédito" | 10.00
+        // 8; "Saldo PS" | 10.00
+        // 9; "PIX" | 0.00 -> 80359786469
+        const chave = "80359786469";
+        const forma_pagamento_id = 9;
+        const venda_pagamento_valor_taxa = '0'
+
 
         if (!clientID) { return { message: 'erro clientID', error: true } }
         if (!eventID) { return { message: 'erro eventID', error: true } }
         if (!tipoIngressoId) { return { message: 'erro eventID', error: true } }
-        if (!tipoIngressoLote) { return { message: 'erro eventID', error: true } }
+        // if (!tipoIngressoLote) { return { message: 'erro eventID', error: true } }
+        if (!tipoIngressoValor) { return { message: 'erro tipoIngressoValor', error: true } }
 
         const { vendaID } = await this.ticketService.generateSale(
             clientID,
@@ -63,7 +75,7 @@ export class TicketController {
             venda_valor_total,
             ingresso_forma_pagamento
         );
-        console.log(rbt);
+        // console.log(rbt);
         this.traceResults.push('generateTicket = OK');
 
 
@@ -82,8 +94,12 @@ export class TicketController {
             forma_pagamento_id,
             venda_pagamento_valor_taxa,
             venda_valor_total,
+            chave
         )
         this.traceResults.push('generateSalePayment = OK');
+
+        await this.ticketService.updateTicketValue(venda_valor_total, vendaID);
+        this.traceResults.push('updateTicketValue = OK');
 
         // // Result function ~~
         // // return this.traceResults;
@@ -131,13 +147,24 @@ export class TicketController {
 
     async getUrlVoucher(saleID: number) {
         if (!saleID) { return console.log('erro saleID'); }
-        const  response  = await fetchDataFromExternalEndpoint(saleID);
-        return response; 
-    
-    }
-   
+        const response = await fetchDataFromExternalEndpoint(saleID);
+        return response;
 
+    }
+
+    async login(clientCpf: number) {
+        if (!clientCpf) { return console.log('erro clientCpf'); }
+        const clientData = await this.ticketService.searchClient(clientCpf) as any[];
+        if (!clientData.length) {
+            throw new BadRequestException('Customer not found');
+        }
+        return clientData[0];
+
+
+    }
      
+
+
 }
 
 
