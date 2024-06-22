@@ -33,12 +33,14 @@ export class TicketService {
         ingresso_valor,
         venda_id,
         ingresso_forma_pagamento,
-        ingresso_valor_pago
+        ingresso_valor_pago,
+        ingresso_impressao_ok,
+        equipamento_num_serie
 
         )values (
             nextval('gen_ingresso'),
             ${ingresso_codigo},
-            'venda site',
+            '',
             ${tipoIngressoId},
             current_timestamp,
             (select to_char(current_timestamp, 'MSDUSDd')),
@@ -48,11 +50,14 @@ export class TicketService {
             ${preco},
             ${vendaId},
             '${ingresso_forma_pagamento}',
-            ${preco}
+            ${preco},
+            1,
+            '0'
 
         );
     `;
     const db = await this._db.queryDB(sql);
+    console.log('generateTicket', db);
     return db;
   }
 
@@ -79,7 +84,8 @@ export class TicketService {
     login,
     tipo_retirada_id,
     venda_valor_total,
-    venda_cadastro_cliente_aprovado
+    venda_cadastro_cliente_aprovado,
+    comissario_id      
     )
 	values (
     ${vendaID},
@@ -90,7 +96,8 @@ export class TicketService {
 		'${login}',
 		${tipo_retirada_id},
 		${venda_valor_total},
-    true
+    false,
+    159
     );
     `;
     const rDB = await this._db.queryDB(sql);
@@ -101,6 +108,7 @@ export class TicketService {
     tipoIngressoId: number,
     vendaID: number,
     venda_itens_vr_unitario: number,
+    qntTickets: number,
   ) {
     const sqlTicketValue = `SELECT * FROM tipo_ingresso WHERE tipo_ingresso_id = ${tipoIngressoId}`;
     const ticketValue = await this._db.queryDB(sqlTicketValue);
@@ -121,10 +129,10 @@ export class TicketService {
        ${ticketValue[0].tipo_ingresso_id},
        ${vendaID},
        ${venda_itens_vr_unitario},
-        1,
+       ${qntTickets},
        '${venda_itens_vr_unitario}',
         0,
-        '13'
+        '0'
         )
   `;
     const rvendai = await this._db.queryDB(sqlItemsSale);
@@ -135,21 +143,21 @@ export class TicketService {
   async generateSalePayment(
     venda_id: number,
     venda_pagamento_status: number, //7
-    venda_pagamento_valor = '861.00',
+    venda_pagamento_valor,
     forma_pagamento_id,
-    venda_pagamento_valor_taxa = '27.47',
+    venda_pagamento_valor_taxa,
     venda_pagamento_valor_pago,
     venda_pagamento_chave
   ) {
     // const sqlTicketValue = `SELECT * FROM tipo_ingresso WHERE tipo_ingresso_id = ${tipoIngressoId}`;
     // const ticketValue = await this._db.queryDB(sqlTicketValue);
-    const venda_pagamento_data_vencimento = null;
-    const venda_pagamento_data_pago = '2024-05-20T23:24:45.875Z';
+    const venda_pagamento_data_vencimento = "2010-01-01T03:00:00.000Z";
+    const venda_pagamento_data_pago = '2024-06-21T18:30:40.080Z';
     // const venda_pagamento_chave = '4B28642B-E3BF-4939-8138-ED9670B68795';
     const venda_pagamento_obs = 'obs';
     const venda_pagamento_paymentlink = '';
-    const venda_pagamento_barcode = null;
-
+    const venda_pagamento_barcode = "";
+    const venda_pagamento_status_detalhe = null;
     const sqlItemsSale = `
 
    INSERT INTO venda_pagamento (
@@ -165,24 +173,22 @@ export class TicketService {
         venda_pagamento_paymentlink,
         venda_pagamento_barcode,
         venda_pagamento_valor_pago,
-        venda_pagamento_valor_taxa,
-        venda_pagamento_status_detalhe
+        venda_pagamento_valor_taxa
                 )
        VALUES(
        nextval('gen_venda_pagamento'),
         ${venda_id},
         ${venda_pagamento_status},
-        current_timestamp,
-        current_timestamp,
+        '${venda_pagamento_data_vencimento}',
+        '${venda_pagamento_data_pago}',
         '${venda_pagamento_chave}',
-        ${venda_pagamento_valor},
+        NULL,
         '${venda_pagamento_obs}',
         ${forma_pagamento_id},
         '${venda_pagamento_paymentlink}',
         '${venda_pagamento_barcode}',
-        ${venda_pagamento_valor_pago},
-        ${venda_pagamento_valor_taxa},
-        'accredited'
+        NULL,
+        ${venda_pagamento_valor_taxa}
         )
   `;
     const a = await this._db.queryDB(sqlItemsSale);
@@ -231,5 +237,43 @@ export class TicketService {
 
   async searchClient(clientCpf) {
     return await this._db.queryDB(`SELECT * from cliente WHERE  cliente_cpf_cnpj = '${clientCpf}'`);
+  }
+
+  async consultaIngressoCodBarra(codBarra) {
+    return await this._db.queryDB(`SELECT * from ingresso WHERE  ingresso_cod_barra = '${codBarra}'`);
+  }
+
+
+
+  async updateVendaPagamentoChaveEQrcode(venda_id, venda_pagamento_id, venda_pagamento_status, venda_pagamento_status_detail, id, qrcode, cod_barras, link_pagamento) {
+    let qrcode_aux = 'NULL';
+    if (qrcode) {
+      qrcode_aux = `'${qrcode}'`;
+    }
+
+    let cod_barras_aux = 'NULL';
+    if (cod_barras) {
+      cod_barras_aux = `'${cod_barras}'`;
+    }
+
+    let link_pagamento_aux = 'NULL';
+    if (link_pagamento) {
+      link_pagamento_aux = `'${link_pagamento}'`;
+    }
+    
+    console.log('venda_id', venda_id)
+    const sql = `
+      UPDATE venda_pagamento
+      SET 
+        venda_pagamento_chave = ${id},
+        venda_pagamento_status = CASE WHEN '${venda_pagamento_status}' = 0 THEN venda_pagamento_status ELSE '${venda_pagamento_status}' END,
+        venda_pagamento_status_detalhe = CASE WHEN '${venda_pagamento_status_detail}' = '' THEN venda_pagamento_status_detalhe ELSE '${venda_pagamento_status_detail}' END,
+        venda_pagamento_qr_code = COALESCE(${qrcode_aux}, venda_pagamento_qr_code),
+        venda_pagamento_barcode = COALESCE(${cod_barras_aux}, venda_pagamento_barcode),
+        venda_pagamento_paymentlink = COALESCE(${link_pagamento_aux}, venda_pagamento_paymentlink)
+      WHERE venda_id = ${venda_id}
+    `;
+
+    return await this._db.queryDB(sql);
   }
 }

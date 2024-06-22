@@ -32,12 +32,14 @@ export class AppController {
     @Body('clientID') clientID: number,
     @Body('eventID') eventID: number,
     @Body('tipoIngressoId') tipoIngressoId: number,
+    @Body('qntTickets') qntTickets: number,
   ): Promise<any> {
     return await this._ticketController.generateTicket(
       tipoIngressoValor,
       clientID,
       eventID,
       tipoIngressoId,
+      qntTickets
     );
   }
 
@@ -78,6 +80,18 @@ export class AppController {
   @Get('login/:cpf')
   async login(@Param('cpf') cpf: number): Promise<any> {
     return await this._ticketController.login(cpf);
+  }
+
+  @Post('atualizaPagamento')
+  async atualizaPagamento(
+    @Body('') json: any,
+  ): Promise<any> {
+    return await this._ticketController.update_venda_pagamento_chave_e_qrcode(json);
+  }
+
+  @Get('consultaIngressoCodBarra/:codBarra')
+  async consultaIngressoCodBarra(@Param('codBarra') codBarra: number): Promise<any> {
+    return await this._ticketController.consultaIngressoCodBarra(codBarra);
   }
 
   // @Get('testSqlIjection/:login/:cod_barra')
