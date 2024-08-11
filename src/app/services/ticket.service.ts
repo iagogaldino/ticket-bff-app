@@ -245,32 +245,13 @@ export class TicketService {
 
 
 
-  async updateVendaPagamentoChaveEQrcode(venda_id, venda_pagamento_id, venda_pagamento_status, venda_pagamento_status_detail, id, qrcode, cod_barras, link_pagamento) {
-    let qrcode_aux = 'NULL';
-    if (qrcode) {
-      qrcode_aux = `'${qrcode}'`;
-    }
-
-    let cod_barras_aux = 'NULL';
-    if (cod_barras) {
-      cod_barras_aux = `'${cod_barras}'`;
-    }
-
-    let link_pagamento_aux = 'NULL';
-    if (link_pagamento) {
-      link_pagamento_aux = `'${link_pagamento}'`;
-    }
-    
-    console.log('venda_id', venda_id)
+  async updateVendaPagamentoChaveEQrcode(venda_id, venda_pagamento_status, venda_pagamento_status_detail, venda_pagamento_chave) {
     const sql = `
       UPDATE venda_pagamento
       SET 
-        venda_pagamento_chave = ${id},
+        venda_pagamento_chave = '${venda_pagamento_chave}',
         venda_pagamento_status = CASE WHEN '${venda_pagamento_status}' = 0 THEN venda_pagamento_status ELSE '${venda_pagamento_status}' END,
-        venda_pagamento_status_detalhe = CASE WHEN '${venda_pagamento_status_detail}' = '' THEN venda_pagamento_status_detalhe ELSE '${venda_pagamento_status_detail}' END,
-        venda_pagamento_qr_code = COALESCE(${qrcode_aux}, venda_pagamento_qr_code),
-        venda_pagamento_barcode = COALESCE(${cod_barras_aux}, venda_pagamento_barcode),
-        venda_pagamento_paymentlink = COALESCE(${link_pagamento_aux}, venda_pagamento_paymentlink)
+        venda_pagamento_status_detalhe = CASE WHEN '${venda_pagamento_status_detail}' = '' THEN venda_pagamento_status_detalhe ELSE '${venda_pagamento_status_detail}' END
       WHERE venda_id = ${venda_id}
     `;
 

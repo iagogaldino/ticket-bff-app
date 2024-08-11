@@ -179,49 +179,57 @@ export class TicketController {
 
     }
 
-    async update_venda_pagamento_chave_e_qrcode(jsonPagamento: json) {
-        if (!jsonPagamento) { throw new BadRequestException('Customer jsonPagamento found'); }
-        let venda_pagamento_status = 0;
-        switch (jsonPagamento.dados_pagamento.status) {
-            case 'pending':
-                venda_pagamento_status = 1;
+    async update_venda_pagamento_chave_e_qrcode(saleId: string, status: string) {
+        if (!saleId) { throw new BadRequestException('Customer saleId found'); }
+        if (!status) { throw new BadRequestException('Customer status found'); }
+      
+        let venda_pagamento_chave = 83486202047;
+        let venda_pagamento_status_detail = '3';
+
+        switch (status) {
+            case '1':
+                venda_pagamento_status_detail = 'pending';
                 break;
-            case "approved":
-                venda_pagamento_status = 3;
+            case '3':
+                venda_pagamento_status_detail = "approved";
                 break;
-            case 'authorized':
-                venda_pagamento_status = 1;
+            case '1':
+                venda_pagamento_status_detail = 'authorized';
                 break;
-            case 'in_process':
-                venda_pagamento_status = 2;
+            case '2':
+                venda_pagamento_status_detail = 'in_process';
                 break;
-            case 'in_mediation':
-                venda_pagamento_status = 5;
+            case '5':
+                venda_pagamento_status_detail = 'in_mediation';
                 break;
-            case 'rejected':
-                venda_pagamento_status = 7;
+            case '7':
+                venda_pagamento_status_detail = 'rejected';
                 break;
-            case 'cancelled':
-                venda_pagamento_status = 7;
+            case '7': // Note que 'rejected' e 'cancelled' têm o mesmo valor
+                venda_pagamento_status_detail = 'cancelled';
                 break;
-            case 'refunded':
-                venda_pagamento_status = 6;
+            case '6':
+                venda_pagamento_status_detail = 'refunded';
                 break;
-            case 'charged_back':
-                venda_pagamento_status = 8;
+            case '8':
+                venda_pagamento_status_detail = 'charged_back';
                 break;
+            default: throw new BadRequestException('Erro status not found');
         }
 
-        return this.ticketService.updateVendaPagamentoChaveEQrcode(
-            jsonPagamento.venda_id,
-            jsonPagamento.dados_pagamento.metadata.venda_pagamento_id,
-            venda_pagamento_status,
-            jsonPagamento.dados_pagamento.status_detail,
-            jsonPagamento.dados_pagamento.id,
-            jsonPagamento.dados_pagamento.point_of_interaction.transaction_data.qr_code,
-            "",
-            jsonPagamento.dados_pagamento.point_of_interaction.transaction_data.ticket_url
-        );
+        const resup: any[] = this.ticketService.updateVendaPagamentoChaveEQrcode(
+            saleId,
+            status,
+            venda_pagamento_status_detail,
+            venda_pagamento_chave
+        ) as any;
+
+        if (resup.length) {
+            throw new BadRequestException(resup); 
+        }
+
+        const urlticket = await fetchDataFromExternalEndpoint(saleId);
+        return urlticket;
     }
 
 

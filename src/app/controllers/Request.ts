@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export async function fetchDataFromExternalEndpoint(vendaID: number): Promise<any> {
+export async function fetchDataFromExternalEndpoint(vendaID: any): Promise<any> {
     try {
         console.log('fetchDataFromExternalEndpoint: vendaID', vendaID)
         // Substitua a URL abaixo pelo endpoint externo que você deseja acessar

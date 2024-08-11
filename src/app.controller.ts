@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { EventsService } from './app/services/events.service';
 import { TicketController } from './app/controllers/TicketController';
@@ -82,11 +82,12 @@ export class AppController {
     return await this._ticketController.login(cpf);
   }
 
-  @Post('atualizaPagamento')
+  @Put('atualizaPagamento/:saleId/:status')
   async atualizaPagamento(
-    @Body('') json: any,
+    @Param('saleId') saleId: string,
+    @Param('status') status: string,
   ): Promise<any> {
-    return await this._ticketController.update_venda_pagamento_chave_e_qrcode(json);
+    return await this._ticketController.update_venda_pagamento_chave_e_qrcode(saleId, status);
   }
 
   @Get('consultaIngressoCodBarra/:codBarra')
